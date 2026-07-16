@@ -1,0 +1,26 @@
+{
+  "skill_name": "repo-review",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "このリポジトリを開発者目線・運用者目線でレビューして、重要度付きでまとめて。",
+      "expected_output": "開発者目線と運用者目線の両セクションを持ち、各指摘に重要度（Critical/Warning/Info）と該当ファイル・コマンド出力の根拠が付いた Markdown レポート。lint/build 等を実際に実行している。良い点も含む。",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 1,
+      "prompt": "このプロジェクト、本番に出す前に運用面で危ないところある？CI/CD とか依存周りとか見て。",
+      "expected_output": "運用者目線を中心に、CI/CD・依存更新自動化・セキュリティ・環境変数・デプロイの観点を重要度付きで評価したレポート。auto-merge の pull_request_target、.env.example 不在、CI にテストが無い等を検出。開発者目線も最低限カバー。",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "prompt": "コード品質とテスト周りを中心に、この Next.js リポジトリをレビューして。",
+      "expected_output": "開発者目線を中心に、型安全・Lint/Format・テスト・アーキテクチャ・App Router の観点を重要度付きで評価。テストフレームワーク未導入を重要な欠落として検出。運用者目線も最低限カバー。",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
