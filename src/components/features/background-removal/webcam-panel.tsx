@@ -8,18 +8,25 @@ import { CutoutCanvas } from '@/components/features/background-removal/cutout-ca
 import { useUserMedia } from '@/hooks/use-user-media';
 import { useRealtimeSegmentation } from '@/hooks/use-realtime-segmentation';
 import { CHECKERBOARD_BACKGROUND_STYLE } from '@/lib/segmentation/checkerboard-style';
-import type { BackgroundMode } from '@/types/segmentation';
+import type {
+  BackgroundMode,
+  SegmentationModelVariant,
+} from '@/types/segmentation';
 
 interface WebcamPanelProps {
   model: CompiledModel | null;
+  modelVariant: SegmentationModelVariant;
   backgroundMode: BackgroundMode;
   backgroundColor: string;
+  onInference?: (ms: number) => void;
 }
 
 export function WebcamPanel({
   model,
+  modelVariant,
   backgroundMode,
   backgroundColor,
+  onInference,
 }: WebcamPanelProps) {
   const { videoRef, status, start, stop } = useUserMedia();
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
@@ -28,7 +35,13 @@ export function WebcamPanel({
     height: number;
   } | null>(null);
   const isStreaming = status.status === 'streaming';
-  const mask = useRealtimeSegmentation(videoRef, model, isStreaming);
+  const mask = useRealtimeSegmentation(
+    videoRef,
+    model,
+    modelVariant,
+    isStreaming,
+    onInference
+  );
 
   return (
     <div className="flex flex-col gap-4">

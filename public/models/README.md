@@ -51,3 +51,26 @@ curl -L -o public/models/segmentation.tflite \
 ### 入出力仕様
 
 実際の名前・shape・dtypeは `model.getInputDetails()` / `model.getOutputDetails()` で確認すること（`src/lib/constants/segmentation-model-config.ts` 参照）。入力は正方形/横長のRGB画像、出力は人物らしさを表す単チャンネルのconfidence mask。
+
+## segmentation-multiclass.tflite（任意）
+
+背景削除デモのモデルセレクタから選択できる2種類目のセグメンテーションモデル。未配置でもアプリは動作するが、選択するとモデル読み込みエラーになる。
+
+### 入手元
+
+- 配布元: Google MediaPipe公式 (`storage.googleapis.com/mediapipe-models`)
+- URL: https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite
+- ライセンス: Apache License 2.0
+- モデル: MediaPipe Multiclass Selfie Segmenter（256x256正方形入力、6クラス出力）。ダウンロードしたファイルを `segmentation-multiclass.tflite` にリネームして配置する。
+
+```bash
+curl -L -o public/models/segmentation-multiclass.tflite \
+  https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite
+```
+
+### 入出力仕様
+
+- 入力: `float32` `[1, 256, 256, 3]`（0-1に正規化したRGB、正方形固定なので横長映像はアスペクト比が歪む）
+- 出力: `float32` `[1, 256, 256, 6]`。ピクセルごとに6クラス（background, hair, body-skin, face-skin, clothes, others）のsoftmax確率。`src/lib/segmentation/postprocess.ts` では `1 - background確率` を前景マスクとして扱っている。
+
+実際の名前・shape・dtype・クラスの並び順は `model.getInputDetails()` / `model.getOutputDetails()` で必ず確認すること（`src/lib/constants/segmentation-model-config.ts` 参照）。

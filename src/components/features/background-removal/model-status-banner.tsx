@@ -1,12 +1,18 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SEGMENTATION_MODEL_CONFIGS } from '@/lib/constants/segmentation-model-config';
 import type { ModelStatus } from '@/types/object-detection';
+import type { SegmentationModelVariant } from '@/types/segmentation';
 
 interface ModelStatusBannerProps {
   status: ModelStatus;
+  modelVariant: SegmentationModelVariant;
 }
 
-export function ModelStatusBanner({ status }: ModelStatusBannerProps) {
+export function ModelStatusBanner({
+  status,
+  modelVariant,
+}: ModelStatusBannerProps) {
   if (status.status === 'idle' || status.status === 'loading') {
     return (
       <div className="flex items-center gap-2">
@@ -25,7 +31,8 @@ export function ModelStatusBanner({ status }: ModelStatusBannerProps) {
         <AlertDescription>
           {status.error.message}
           <br />
-          public/models/segmentation.tflite が配置されているか確認してください。
+          {SEGMENTATION_MODEL_CONFIGS[modelVariant].url.replace(/^\//, '')}{' '}
+          が配置されているか確認してください。
         </AlertDescription>
       </Alert>
     );
@@ -36,7 +43,7 @@ export function ModelStatusBanner({ status }: ModelStatusBannerProps) {
       <Alert>
         <AlertTitle>CPU (WebAssembly) で実行中</AlertTitle>
         <AlertDescription>
-          このブラウザではWebGPUが利用できないため、CPUにフォールバックしています。
+          CPU (WebAssembly) アクセラレータでモデルを実行しています。
         </AlertDescription>
       </Alert>
     );

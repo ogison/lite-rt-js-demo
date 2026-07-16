@@ -5,6 +5,10 @@ import type { CompiledModel } from '@litertjs/core';
 import { getSegmentationModel } from '@/lib/litert/load-segmentation-model';
 import { useLiteRtRuntime } from '@/hooks/use-litert-runtime';
 import type { ModelStatus } from '@/types/object-detection';
+import type {
+  SegmentationAccelerator,
+  SegmentationModelVariant,
+} from '@/types/segmentation';
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
@@ -20,19 +24,32 @@ interface LoadResult {
   model: CompiledModel | null;
 }
 
-export function useSegmentationModel(): UseSegmentationModelResult {
+export function useSegmentationModel(
+  accelerator: SegmentationAccelerator,
+  variant: SegmentationModelVariant
+): UseSegmentationModelResult {
   const runtime = useLiteRtRuntime();
   const [result, setResult] = useState<LoadResult>({
     status: { status: 'idle' },
     model: null,
   });
 
+  // Switching accelerators or model variants shows the loading state until
+  // the newly requested model finishes compiling. Adjusting state during
+  // render (rather than in an effect) avoids a cascading re-render.
+  const pendingKey = `${accelerator}:${variant}`;
+  const [pendingKeyState, setPendingKeyState] = useState(pendingKey);
+  if (pendingKeyState !== pendingKey) {
+    setPendingKeyState(pendingKey);
+    setResult({ status: { status: 'loading' }, model: null });
+  }
+
   useEffect(() => {
     if (runtime.status !== 'ready') return;
 
     let cancelled = false;
 
-    getSegmentationModel()
+    getSegmentationModel(accelerator, variant)
       .then((loaded) => {
         if (cancelled) return;
         const describe = (
@@ -67,7 +84,7 @@ export function useSegmentationModel(): UseSegmentationModelResult {
     return () => {
       cancelled = true;
     };
-  }, [runtime.status]);
+  }, [runtime.status, accelerator, variant]);
 
   if (runtime.status === 'error') {
     return { status: { status: 'error', error: runtime.error }, model: null };

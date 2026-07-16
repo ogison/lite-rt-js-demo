@@ -8,18 +8,26 @@ import { CutoutCanvas } from '@/components/features/background-removal/cutout-ca
 import { imageSourceToSegmentationInputTensor } from '@/lib/segmentation/preprocess';
 import { tensorToSegmentationMask } from '@/lib/segmentation/postprocess';
 import { CHECKERBOARD_BACKGROUND_STYLE } from '@/lib/segmentation/checkerboard-style';
-import type { BackgroundMode, SegmentationMask } from '@/types/segmentation';
+import type {
+  BackgroundMode,
+  SegmentationMask,
+  SegmentationModelVariant,
+} from '@/types/segmentation';
 
 interface ImageUploadPanelProps {
   model: CompiledModel | null;
+  modelVariant: SegmentationModelVariant;
   backgroundMode: BackgroundMode;
   backgroundColor: string;
+  onInference?: (ms: number) => void;
 }
 
 export function ImageUploadPanel({
   model,
+  modelVariant,
   backgroundMode,
   backgroundColor,
+  onInference,
 }: ImageUploadPanelProps) {
   const imageRef = useRef<HTMLImageElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -60,11 +68,14 @@ export function ImageUploadPanel({
       const inputTensor = imageSourceToSegmentationInputTensor(
         image,
         image.naturalWidth,
-        image.naturalHeight
+        image.naturalHeight,
+        modelVariant
       );
+      const startedAt = performance.now();
       const outputs = await model.run(inputTensor);
+      onInference?.(performance.now() - startedAt);
       inputTensor.delete();
-      const result = await tensorToSegmentationMask(outputs);
+      const result = await tensorToSegmentationMask(outputs, modelVariant);
       setMask(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

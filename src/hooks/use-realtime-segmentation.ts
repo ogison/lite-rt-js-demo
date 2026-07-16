@@ -5,22 +5,35 @@ import type { CompiledModel } from '@litertjs/core';
 import { imageSourceToSegmentationInputTensor } from '@/lib/segmentation/preprocess';
 import { tensorToSegmentationMask } from '@/lib/segmentation/postprocess';
 import { SEGMENTATION_INTERVAL_MS } from '@/lib/constants/segmentation-model-config';
-import type { SegmentationMask } from '@/types/segmentation';
+import type {
+  SegmentationMask,
+  SegmentationModelVariant,
+} from '@/types/segmentation';
 
 /**
  * Runs segmentation on a <video> element in a requestAnimationFrame loop,
  * throttled to SEGMENTATION_INTERVAL_MS and guarded so a slow inference never
  * overlaps with the next one (skips frames instead of queuing them). Mirrors
  * useRealtimeDetection.
+ *
+ * `onInference` is called with the wall-clock time (ms) each `model.run` takes,
+ * so callers can compare accelerator performance.
  */
 export function useRealtimeSegmentation(
   videoRef: React.RefObject<HTMLVideoElement | null>,
   model: CompiledModel | null,
-  enabled: boolean
+  modelVariant: SegmentationModelVariant,
+  enabled: boolean,
+  onInference?: (ms: number) => void
 ): SegmentationMask | null {
   const [mask, setMask] = useState<SegmentationMask | null>(null);
   const isRunningRef = useRef(false);
   const lastRunAtRef = useRef(0);
+  const onInferenceRef = useRef(onInference);
+
+  useEffect(() => {
+    onInferenceRef.current = onInference;
+  }, [onInference]);
 
   useEffect(() => {
     if (!enabled || !model) return;
@@ -32,11 +45,14 @@ export function useRealtimeSegmentation(
       const inputTensor = imageSourceToSegmentationInputTensor(
         video,
         video.videoWidth,
-        video.videoHeight
+        video.videoHeight,
+        modelVariant
       );
       try {
+        const startedAt = performance.now();
         const outputs = await model.run(inputTensor);
-        const result = await tensorToSegmentationMask(outputs);
+        onInferenceRef.current?.(performance.now() - startedAt);
+        const result = await tensorToSegmentationMask(outputs, modelVariant);
         if (!cancelled) setMask(result);
       } catch (error) {
         console.error(
@@ -69,7 +85,7 @@ export function useRealtimeSegmentation(
       cancelled = true;
       cancelAnimationFrame(rafId);
     };
-  }, [enabled, model, videoRef]);
+  }, [enabled, model, modelVariant, videoRef]);
 
   return enabled ? mask : null;
 }

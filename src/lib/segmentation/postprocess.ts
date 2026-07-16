@@ -1,25 +1,50 @@
 import type { Tensor } from '@litertjs/core';
-import {
-  SEGMENTATION_INPUT_HEIGHT,
-  SEGMENTATION_INPUT_WIDTH,
-} from '@/lib/constants/segmentation-model-config';
-import type { SegmentationMask } from '@/types/segmentation';
+import { SEGMENTATION_MODEL_CONFIGS } from '@/lib/constants/segmentation-model-config';
+import type {
+  SegmentationMask,
+  SegmentationModelVariant,
+} from '@/types/segmentation';
+
+const MULTICLASS_CHANNELS = 6;
+/** Channel index of the background class within the multiclass-6 output. */
+const MULTICLASS_BACKGROUND_CHANNEL = 0;
 
 /**
- * Converts the single mask output Tensor into a SegmentationMask, and
- * deletes the tensor once its data has been read (LiteRT.js uses manual
- * memory management).
+ * Converts the model output Tensor(s) into a SegmentationMask, and deletes
+ * the tensor(s) once their data has been read (LiteRT.js uses manual memory
+ * management).
+ *
+ * `foreground-mask` models output a single foreground-probability channel
+ * directly. `multiclass-6` models output 6 per-class softmax probabilities
+ * (background/hair/body-skin/face-skin/clothes/others) per pixel; since the
+ * classes sum to 1, the foreground probability is `1 - background`.
  */
 export async function tensorToSegmentationMask(
-  outputs: readonly Tensor[]
+  outputs: readonly Tensor[],
+  variant: SegmentationModelVariant
 ): Promise<SegmentationMask> {
   const [maskTensor] = outputs;
   const raw = await maskTensor.data();
   maskTensor.delete();
 
-  return {
-    data: raw instanceof Float32Array ? raw : new Float32Array(raw),
-    width: SEGMENTATION_INPUT_WIDTH,
-    height: SEGMENTATION_INPUT_HEIGHT,
-  };
+  const { inputWidth, inputHeight, outputKind } =
+    SEGMENTATION_MODEL_CONFIGS[variant];
+
+  if (outputKind === 'foreground-mask') {
+    return {
+      data: raw instanceof Float32Array ? raw : new Float32Array(raw),
+      width: inputWidth,
+      height: inputHeight,
+    };
+  }
+
+  const pixelCount = inputWidth * inputHeight;
+  const data = new Float32Array(pixelCount);
+  for (let pixel = 0; pixel < pixelCount; pixel++) {
+    const background =
+      raw[pixel * MULTICLASS_CHANNELS + MULTICLASS_BACKGROUND_CHANNEL];
+    data[pixel] = 1 - background;
+  }
+
+  return { data, width: inputWidth, height: inputHeight };
 }
