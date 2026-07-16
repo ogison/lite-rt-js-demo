@@ -31,8 +31,8 @@ export function ModelStatusBanner({
         <AlertDescription>
           {status.error.message}
           <br />
-          {SEGMENTATION_MODEL_CONFIGS[modelVariant].url.replace(/^\//, '')}{' '}
-          が配置されているか確認してください。
+          {SEGMENTATION_MODEL_CONFIGS[modelVariant].url}{' '}
+          に配置・アクセスできるか確認してください。
         </AlertDescription>
       </Alert>
     );

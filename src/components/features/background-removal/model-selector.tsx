@@ -24,6 +24,12 @@ const OPTIONS: ReadonlyArray<{
     description:
       '正方形入力・髪/肌/服などをクラス分けする多クラスモデル。背景以外のクラスを合成して前景マスクとして利用します。',
   },
+  {
+    value: 'u2net-full',
+    label: 'U²-Net Full',
+    description:
+      '人物に限らない一般物体のsalient object detectionモデル。WebGPUでのみ動作し、CPU (WebAssembly) フォールバックはありません。',
+  },
 ];
 
 export function ModelSelector({
