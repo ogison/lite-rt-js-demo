@@ -43,3 +43,7 @@ next-env.d.ts
 # skill development artifacts (eval workspaces, python cache)
 .agents/skills/*-workspace/
 **/__pycache__/
+
+# LiteRT.js runtime assets and model files (generated / manually placed, not committed)
+/public/wasm/
+/public/models/*.tflite
