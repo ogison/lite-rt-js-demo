@@ -10,7 +10,10 @@ import { AcceleratorSelector } from '@/components/features/background-removal/ac
 import { ModelSelector } from '@/components/features/background-removal/model-selector';
 import { BackgroundModeSelector } from '@/components/features/background-removal/background-mode-selector';
 import { SourceModeTabs } from '@/components/features/background-removal/source-mode-tabs';
-import { DEFAULT_SEGMENTATION_MODEL_VARIANT } from '@/lib/constants/segmentation-model-config';
+import {
+  DEFAULT_SEGMENTATION_MODEL_VARIANT,
+  SEGMENTATION_MODEL_CONFIGS,
+} from '@/lib/constants/segmentation-model-config';
 import type {
   BackgroundMode,
   InferenceStats,
@@ -35,16 +38,19 @@ export function BackgroundRemovalPage() {
     () => false
   );
 
-  // `null` means "follow the default for this browser"; a non-null value is an
-  // explicit user choice.
-  const [selectedAccelerator, setSelectedAccelerator] =
-    useState<SegmentationAccelerator | null>(null);
-  const accelerator: SegmentationAccelerator =
-    selectedAccelerator ?? (webGpuSupported ? 'webgpu' : 'wasm');
-
   const [modelVariant, setModelVariant] = useState<SegmentationModelVariant>(
     DEFAULT_SEGMENTATION_MODEL_VARIANT
   );
+  const { requiresWebGpu } = SEGMENTATION_MODEL_CONFIGS[modelVariant];
+
+  // `null` means "follow the default for this browser"; a non-null value is an
+  // explicit user choice. Models with no CPU fallback always force WebGPU,
+  // overriding the user's accelerator choice.
+  const [selectedAccelerator, setSelectedAccelerator] =
+    useState<SegmentationAccelerator | null>(null);
+  const accelerator: SegmentationAccelerator = requiresWebGpu
+    ? 'webgpu'
+    : (selectedAccelerator ?? (webGpuSupported ? 'webgpu' : 'wasm'));
 
   const { status, model } = useSegmentationModel(accelerator, modelVariant);
   const [backgroundMode, setBackgroundMode] =
@@ -107,6 +113,7 @@ export function BackgroundRemovalPage() {
             accelerator={accelerator}
             onAcceleratorChange={setSelectedAccelerator}
             webGpuSupported={webGpuSupported}
+            wasmDisabled={requiresWebGpu}
             stats={stats}
           />
         </CardContent>

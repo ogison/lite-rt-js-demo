@@ -44,6 +44,10 @@ next-env.d.ts
 .agents/skills/*-workspace/
 **/__pycache__/
 
-# LiteRT.js runtime assets and model files (generated / manually placed, not committed)
+# LiteRT.js runtime assets and model files (generated / manually placed, not committed).
+# object-detection.tflite is committed (small, and its upstream distribution is a
+# zip archive that can't be fetched directly at runtime), the rest are fetched
+# from their upstream URLs in production and placed locally for development.
 /public/wasm/
 /public/models/*.tflite
+!/public/models/object-detection.tflite

@@ -30,8 +30,8 @@ export interface ComposeCutoutOptions {
 
 /**
  * Composites `source` onto `outputCtx` with its background removed, using
- * `mask` (foreground/person probability, confirmed via a debug run to be in
- * [0, 1] with 1 = person) as the cutout's alpha channel.
+ * `mask` (foreground probability, confirmed via a debug run to be in [0, 1]
+ * with 1 = foreground) as the cutout's alpha channel.
  */
 export function composeCutout(
   outputCtx: CanvasRenderingContext2D,

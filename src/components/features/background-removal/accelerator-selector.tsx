@@ -10,6 +10,8 @@ interface AcceleratorSelectorProps {
   accelerator: SegmentationAccelerator;
   onAcceleratorChange: (accelerator: SegmentationAccelerator) => void;
   webGpuSupported: boolean;
+  /** True when the selected model has no CPU (wasm) fallback. */
+  wasmDisabled?: boolean;
   stats: InferenceStats | null;
 }
 
@@ -25,13 +27,16 @@ export function AcceleratorSelector({
   accelerator,
   onAcceleratorChange,
   webGpuSupported,
+  wasmDisabled = false,
   stats,
 }: AcceleratorSelectorProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         {OPTIONS.map((option) => {
-          const disabled = option.value === 'webgpu' && !webGpuSupported;
+          const disabled =
+            (option.value === 'webgpu' && !webGpuSupported) ||
+            (option.value === 'wasm' && wasmDisabled);
           return (
             <Button
               key={option.value}
@@ -50,6 +55,13 @@ export function AcceleratorSelector({
         <p className="text-xs text-muted-foreground">
           このブラウザはWebGPUに対応していないため、CPU (WebAssembly)
           のみ利用できます。
+        </p>
+      )}
+
+      {wasmDisabled && (
+        <p className="text-xs text-muted-foreground">
+          選択中のモデルはCPU (WebAssembly)
+          フォールバックがなく、WebGPUでのみ動作します。
         </p>
       )}
 

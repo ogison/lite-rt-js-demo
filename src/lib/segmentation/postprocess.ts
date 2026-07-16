@@ -14,8 +14,10 @@ const MULTICLASS_BACKGROUND_CHANNEL = 0;
  * the tensor(s) once their data has been read (LiteRT.js uses manual memory
  * management).
  *
- * `foreground-mask` models output a single foreground-probability channel
- * directly. `multiclass-6` models output 6 per-class softmax probabilities
+ * `foreground-mask` models (selfie-landscape, u2net-full) output a single
+ * foreground-probability channel directly — this holds regardless of
+ * NHWC/NCHW layout, since a single channel flattens identically either way.
+ * `multiclass-6` models output 6 per-class softmax probabilities
  * (background/hair/body-skin/face-skin/clothes/others) per pixel; since the
  * classes sum to 1, the foreground probability is `1 - background`.
  */
