@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Vendored LiteRT.js Wasm runtime, copied from node_modules by
+    // scripts/copy-litert-wasm.mjs (not source code).
+    'public/wasm/**',
   ]),
 ]);
 
